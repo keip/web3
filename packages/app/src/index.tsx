@@ -1,20 +1,31 @@
 import { createRoot } from 'react-dom/client'
 import Container from '@mui/material/Container'
 import Grid from '@mui/material/Grid'
-import Nav from './components/Nav'
+import Nav from './components/Nav.tsx'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark'
+  }
+})
 
 const App = () => {
   return (
-    <Container maxWidth={false}>
-      <Grid container>
-        <Grid item width={200}>
-          <Nav />
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Container maxWidth={false}>
+        <Grid container spacing={3}>
+          <Grid item width={200}>
+            <Nav />
+          </Grid>
+          <Grid item flex={1}>
+            Content
+          </Grid>
         </Grid>
-        <Grid item flex={1}>
-          Content
-        </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </ThemeProvider>
   )
 }
 
