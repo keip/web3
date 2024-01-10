@@ -1760,6 +1760,13 @@
   resolved "https://registry.yarnpkg.com/@mui/core-downloads-tracker/-/core-downloads-tracker-5.15.3.tgz#40fc854d7cf5505a182a4e121149dfe21cd277ef"
   integrity sha512-sWeihiVyxdJjpLkp8SHkTy9kt2M/o11M60G1MzwljGL2BXdM3Ktzqv5QaQHdi00y7Y1ulvtI3GOSxP2xU8mQJw==
 
+"@mui/icons-material@^5.15.3":
+  version "5.15.3"
+  resolved "https://registry.yarnpkg.com/@mui/icons-material/-/icons-material-5.15.3.tgz#eee07582ea3ad913982b7843ff1612d0fad21278"
+  integrity sha512-7LEs8AnO2Se/XYH+CcJndRsGAE+M8KAExiiQHf0V11poqmPVGcbbY82Ry2IUYf9+rOilCVnWI18ErghZ625BPQ==
+  dependencies:
+    "@babel/runtime" "^7.23.6"
+
 "@mui/material@^5.15.3":
   version "5.15.3"
   resolved "https://registry.yarnpkg.com/@mui/material/-/material-5.15.3.tgz#b77f1ac1275e5bf13b735e8224bdd301aab918c4"
@@ -7949,6 +7956,11 @@ react-app-polyfill@^3.0.0:
     raf "^3.4.1"
     regenerator-runtime "^0.13.9"
     whatwg-fetch "^3.6.2"
+
+react-crypto-icons@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/react-crypto-icons/-/react-crypto-icons-1.0.5.tgz#015912c20d6c3177861afeaab3f37e4200556ca9"
+  integrity sha512-kh8O55ze+ib2dJOAORcmhCB9a1SuBdj3f1Q6GGzVez/yL8NXklRKz32hKAVAJPCDuR8iXRuG51DrxVGouNdIEw==
 
 react-dev-utils@^12.0.1:
   version "12.0.1"

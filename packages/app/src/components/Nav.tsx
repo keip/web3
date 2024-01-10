@@ -1,7 +1,7 @@
-import ConnectMetamask from './ConnectMetamask.tsx'
+import Wallet from './Wallet.tsx'
 
 const Nav = () => {
-  return <ConnectMetamask />
+  return <Wallet />
 }
 
 export default Nav

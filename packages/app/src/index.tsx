@@ -17,7 +17,10 @@ const App = () => {
       <CssBaseline />
       <Container maxWidth={false}>
         <Grid container spacing={3}>
-          <Grid item width={200}>
+          <Grid item width={280} sx={{
+            background: '#000',
+            height: '100vh'
+          }}>
             <Nav />
           </Grid>
           <Grid item flex={1}>
