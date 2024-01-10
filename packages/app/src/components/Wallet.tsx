@@ -6,25 +6,39 @@ import { formatAddress } from '../helpers/index.ts'
 import config from '../config/index.ts'
 import Grid from '@mui/material/Grid'
 import CryptoIcon from 'react-crypto-icons'
+import { connect, useDispatch } from 'react-redux'
+import { type RootState } from '../types/index.ts'
 
-const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
+// const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
 
-const ConnectMetamask = (): JSX.Element => {
+export interface WalletProps {
+  balance: AddressBalance[]
+}
+
+const Wallet = (props: WalletProps): JSX.Element => {
+  const [balance, setBalance] = useState(props.balance)
+  const dispatch = useDispatch()
   const tatum = useRef<Ethereum | null>(null)
   const [address, setAddress] = useState<string>('')
-  const [balance, setBalance] = useState<AddressBalance[]>([])
-
   const init = TatumSDK.init<Ethereum>({ network: Network.ETHEREUM, apiKey: { v3: config.apiKey } })
 
   const connectWallet = async (network: Ethereum) => {
     return await network.walletProvider.use(MetaMask).getWallet()
   }
 
-  const getBalance = async (network: Ethereum, address: string) => {
-    return await network.address.getBalance({
-      // addresses: [address]
-      addresses: [wallet1]
-    })
+  const getBalance = (network: Ethereum, address: string) => {
+    network.address.getBalance({
+      addresses: [address]
+      // addresses: [wallet1]
+    }).then((balance) => {
+      if (balance.status === 'SUCCESS') {
+        console.log('get balance', balance)
+        dispatch({
+          type: 'SET_BALLANCE',
+          payload: balance.data
+        })
+      }
+    }).catch(() => {})
   }
 
   useEffect(() => {
@@ -37,14 +51,7 @@ const ConnectMetamask = (): JSX.Element => {
       connectWallet(network).then((address) => {
         console.log(`wallet connected: ${address}`)
         setAddress(address)
-
-        getBalance(network, address).then((balance) => {
-          if (balance.status === 'SUCCESS') {
-            console.log('get balance', balance)
-            setBalance(balance.data)
-          }
-          // todo: get balance done
-        }).catch(() => {})
+        getBalance(network, address)
       }).catch(() => {
         // todo: wallet not connected
       })
@@ -52,6 +59,10 @@ const ConnectMetamask = (): JSX.Element => {
       // todo: tatum not initialized
     })
   }, [])
+
+  useEffect(() => {
+    setBalance(props.balance)
+  }, [props.balance])
 
   return address === undefined
     ? (
@@ -64,14 +75,14 @@ const ConnectMetamask = (): JSX.Element => {
         </Button>
       )
     : (
-        <Grid container>
-          <Grid item md={2}>
+        <Grid container spacing={3}>
+          <Grid item>
             <CryptoIcon name="eth" size={25} />
           </Grid>
-          <Grid item md={10}>
+          <Grid item flex={1}>
             <Typography variant="h6" align="center">{formatAddress(address)}</Typography>
           </Grid>
-          {balance.map(b => (
+          {balance?.map(b => (
             <Grid item md={12} key={`${b.address}-${b.asset}`}>
               <Typography>{b.asset}</Typography>
               <Typography>{b.balance}</Typography>
@@ -81,4 +92,6 @@ const ConnectMetamask = (): JSX.Element => {
       )
 }
 
-export default ConnectMetamask
+export default connect((state: RootState) => ({
+  balance: state.balance
+}))(Wallet)

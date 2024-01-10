@@ -4,6 +4,9 @@ import Grid from '@mui/material/Grid'
 import Nav from './components/Nav.tsx'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { configureStore } from '@reduxjs/toolkit'
+import { Provider } from 'react-redux'
+import reducers from './reducers/index.ts'
 
 const darkTheme = createTheme({
   palette: {
@@ -11,16 +14,21 @@ const darkTheme = createTheme({
   }
 })
 
+const store = configureStore({
+  reducer: reducers
+})
+
 const App = () => {
   return (
+    <Provider store={store}>
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Container maxWidth={false}>
         <Grid container spacing={3}>
           <Grid item width={280} sx={{
-            background: '#000',
-            height: '100vh'
-          }}>
+            background: '#000'
+          }}
+          >
             <Nav />
           </Grid>
           <Grid item flex={1}>
@@ -29,6 +37,7 @@ const App = () => {
         </Grid>
       </Container>
     </ThemeProvider>
+    </Provider>
   )
 }
 
