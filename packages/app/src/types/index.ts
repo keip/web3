@@ -1,5 +1,5 @@
-import { AddressBalance } from "@tatumio/tatum"
+import { type AddressBalance } from '@tatumio/tatum'
 
-export type RootState = {
-    balance: AddressBalance[]
+export interface RootState {
+  balance: AddressBalance[]
 }
