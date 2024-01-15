@@ -5,6 +5,7 @@
   "description": "",
   "scripts": {
     "eslint": "eslint ./",
+    "start:app": "yarn workspace @web3/app start",
     "ts": "tsc --project ./"
   },
   "devDependencies": {

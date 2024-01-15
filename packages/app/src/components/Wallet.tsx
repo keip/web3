@@ -8,8 +8,11 @@ import Grid from '@mui/material/Grid'
 import CryptoIcon from 'react-crypto-icons'
 import { connect, useDispatch } from 'react-redux'
 import { type RootState } from '../types/index.ts'
+import List from '@mui/material/List'
+import ListItemButton from '@mui/material/ListItemButton'
+import ListItemText from '@mui/material/ListItemText'
 
-// const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
+const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
 
 export interface WalletProps {
   balance: AddressBalance[]
@@ -28,8 +31,8 @@ const Wallet = (props: WalletProps): JSX.Element => {
 
   const getBalance = (network: Ethereum, address: string) => {
     network.address.getBalance({
-      addresses: [address]
-      // addresses: [wallet1]
+      // addresses: [address]
+      addresses: [wallet1]
     }).then((balance) => {
       if (balance.status === 'SUCCESS') {
         console.log('get balance', balance)
@@ -80,14 +83,17 @@ const Wallet = (props: WalletProps): JSX.Element => {
             <CryptoIcon name="eth" size={25} />
           </Grid>
           <Grid item flex={1}>
-            <Typography variant="h6" align="center">{formatAddress(address)}</Typography>
+            <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
           </Grid>
-          {balance?.map(b => (
-            <Grid item md={12} key={`${b.address}-${b.asset}`}>
-              <Typography>{b.asset}</Typography>
-              <Typography>{b.balance}</Typography>
-            </Grid>
-          ))}
+          <Grid item md={12}>
+            <List>
+              {balance?.map(b => (
+                <ListItemButton key={`${b.address}-${b.asset}`}>
+                  <ListItemText primary={b.asset} secondary={b.balance} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Grid>
         </Grid>
       )
 }

@@ -8,7 +8,7 @@ const Nav = () => {
       background: '#000',
       height: '100vh'
     }}>
-      <Box my={3}>
+      <Box my={6}>
         <Wallet />
       </Box>
     </Card>
