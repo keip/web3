@@ -1,55 +1,37 @@
 import { connect } from 'react-redux'
 import { type RootState } from '../types'
-import { type Ethereum, Network, TatumSDK, type AddressBalance, type AddressTransaction } from '@tatumio/tatum'
-import config from '../config/index.ts'
-import { useEffect, useRef, useState } from 'react'
+import { type AddressBalance, type AddressTransaction } from '@tatumio/tatum'
+import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
 
 interface WalletDetailProps {
+  balance: AddressBalance[]
+  transactions: AddressTransaction[]
   detail: AddressBalance | null
 }
 
 const WalletDetail = (props: WalletDetailProps) => {
-  const [transactions, setTransactions] = useState<AddressTransaction[]>([])
-  const [detail, setDetail] = useState(props.detail)
-  const tatum = useRef<Ethereum | null>(null)
-  const init = TatumSDK.init<Ethereum>({ network: Network.ETHEREUM, apiKey: { v4: config.apiKey } })
+  const [transactions, setTransactions] = useState(props.transactions)
+  const detail = props.detail
 
-  const getTransactions = () => {
-    setTransactions([])
+  useEffect(() => {
     if (detail !== null) {
-      const address = detail.tokenAddress !== null ? detail.tokenAddress : detail.address
-      if (address !== undefined) {
-        console.log('get transactions')
-        tatum.current?.address.getTransactions({
-          address
-        }).then((res) => {
-          if (res.status === 'SUCCESS') {
-            setTransactions(res.data)
-          }
-          console.log(res)
-        }).catch(() => {})
+      const tokenAddress = detail.tokenAddress
+      if (tokenAddress !== undefined) {
+        setTransactions(props.transactions.filter(t => t.transactionSubtype !== 'zero-transfer' && t.tokenAddress === tokenAddress))
+      } else {
+        setTransactions(props.transactions.filter(t => t.transactionSubtype !== 'zero-transfer' && t.tokenAddress === undefined))
       }
     }
-  }
-
-  useEffect(() => {
-    init.then((network: Ethereum) => {
-      tatum.current = network
-    }).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    setDetail(props.detail)
-    getTransactions()
-  }, [props.detail])
+  }, [detail, props.transactions])
 
   return detail !== null
     ? (
-        <Box p={3}>
+        <Box px={3} py={6}>
           <Grid container spacing={3}>
             <Grid item md={12}>
               <Typography variant="h3">
@@ -63,14 +45,22 @@ const WalletDetail = (props: WalletDetailProps) => {
             </Grid>
             {transactions.length === 0 && (
               <Grid item md={12}>
-                <CircularProgress />
+                <Typography>No transactions</Typography>
               </Grid>
             )}
-            {transactions.map(transaction => (
-              <Grid item md={12} key={transaction.hash}>
-                {transaction.amount}
+            {transactions.map((transaction, key) => {
+              return (
+              <Grid item md={12} key={`${transaction.address}-${key}`}>
+                <Card>
+                  <CardContent>
+                    <Typography color={transaction.transactionSubtype === 'incoming' ? 'green' : 'red'}>
+                      {transaction.transactionSubtype === 'incoming' && '+'}{transaction.amount}
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Grid>
-            ))}
+              )
+            })}
           </Grid>
         </Box>
       )
@@ -78,5 +68,7 @@ const WalletDetail = (props: WalletDetailProps) => {
 }
 
 export default connect((state: RootState) => ({
-  detail: state.detail
+  balance: state.balance,
+  detail: state.detail,
+  transactions: state.transactions
 }))(WalletDetail)

@@ -14,12 +14,7 @@ import ListItemText from '@mui/material/ListItemText'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 
-const wallets = [
-  {
-    title: 'OKX',
-    address: '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
-  }
-]
+// const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
 
 export interface WalletProps {
   balance: AddressBalance[]
@@ -29,28 +24,30 @@ const Wallet = (props: WalletProps): JSX.Element => {
   const balance = props.balance
   const dispatch = useDispatch()
   const tatum = useRef<Ethereum | null>(null)
-  const [address, setAddress] = useState<string>(wallets[0].address)
+  const [address, setAddress] = useState<string>()
   const init = TatumSDK.init<Ethereum>({ network: Network.ETHEREUM, apiKey: { v4: config.apiKey } })
 
-  const connectWallet = async (network: Ethereum) => {
-    await network.walletProvider.use(MetaMask).getWallet().then((address) => {
+  const connectWallet = () => {
+    tatum.current?.walletProvider.use(MetaMask).getWallet().then((address) => {
       setAddress(address)
       console.log(`wallet connected: ${address}`)
-      getBalance(network)
+      getBalance(address)
+      getTransactions(address)
     }).catch(() => {
       // todo: wallet not connected
     })
   }
 
-  const getBalance = (network: Ethereum) => {
-    dispatch({
-      type: 'SET_BALLANCE',
-      payload: []
-    })
-    network.address.getBalance({
+  const getBalance = (address: string) => {
+    console.log('get balance:', address)
+    tatum.current?.address.getBalance({
       addresses: [address]
     }).then((balance) => {
       if (balance.status === 'SUCCESS') {
+        dispatch({
+          type: 'SET_DETAIL',
+          payload: balance.data[0]
+        })
         dispatch({
           type: 'SET_BALLANCE',
           payload: balance.data
@@ -59,12 +56,31 @@ const Wallet = (props: WalletProps): JSX.Element => {
     }).catch(() => {})
   }
 
+  const getTransactions = (address: string) => {
+    console.log('get transactions:', address)
+    tatum.current?.address.getTransactions({
+      address,
+      pageSize: 50,
+      transactionTypes: ['native', 'fungible']
+    }).then((res) => {
+      if (res.status === 'SUCCESS') {
+        dispatch({
+          type: 'SET_TRANSACTIONS',
+          payload: res.data
+        })
+      }
+      console.log('set transactions:', res.data)
+    }).catch(() => {})
+  }
+
   useEffect(() => {
     // init tatum
     init.then((network) => {
       tatum.current = network
       console.log('initialized')
-      getBalance(network)
+      // setAddress(wallet1)
+      // getBalance(wallet1)
+      // getTransactions(wallet1)
     }).catch(() => {
       // todo: tatum not initialized
     })
@@ -74,7 +90,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
     ? (
         <Button onClick={() => {
           if (tatum.current !== null) {
-            connectWallet(tatum.current).then(() => {}).catch(() => {})
+            connectWallet()
           }
         }}>
             Connect Wallet
