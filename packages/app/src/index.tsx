@@ -7,6 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import reducers from './reducers/index.ts'
+import Detail from './components/Detail.tsx'
 
 const darkTheme = createTheme({
   palette: {
@@ -32,7 +33,7 @@ const App = () => {
             <Nav />
           </Grid>
           <Grid item flex={1}>
-            Content
+            <Detail />
           </Grid>
         </Grid>
       </Container>

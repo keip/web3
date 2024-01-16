@@ -1,20 +1,20 @@
 import { type AddressBalance } from '@tatumio/tatum'
 
-export type BallanceReducerActions = 'SET_BALLANCE'
-const initialState: AddressBalance[] = []
+export type DetailReducerActions = 'SET_DETAIL'
+const initialState: AddressBalance | null = null
 
-const ballanceReducer = (
+const DetailReducer = (
   state = initialState,
   action: {
-    type: BallanceReducerActions
-    payload: AddressBalance[]
+    type: DetailReducerActions
+    payload: AddressBalance
   }) => {
   switch (action.type) {
-    case 'SET_BALLANCE':
+    case 'SET_DETAIL':
       return action.payload
     default:
       return state
   }
 }
 
-export default ballanceReducer
+export default DetailReducer
