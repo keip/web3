@@ -8,6 +8,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import reducers from './reducers/index.ts'
 import Detail from './components/Detail.tsx'
+import Box from '@mui/material/Box'
 
 const darkTheme = createTheme({
   palette: {
@@ -30,7 +31,9 @@ const App = () => {
             background: '#000'
           }}
           >
-            <Nav />
+            <Box mr={3}>
+              <Nav />
+            </Box>
           </Grid>
           <Grid item flex={1}>
             <Detail />

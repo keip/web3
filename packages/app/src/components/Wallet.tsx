@@ -1,11 +1,9 @@
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import { TatumSDK, Network, type Ethereum, MetaMask, type AddressBalance } from '@tatumio/tatum'
 import { useEffect, useRef, useState } from 'react'
 import { formatAddress } from '../helpers/index.ts'
 import config from '../config/index.ts'
 import Grid from '@mui/material/Grid'
-import CryptoIcon from 'react-crypto-icons'
 import { connect, useDispatch } from 'react-redux'
 import { type RootState } from '../types/index.ts'
 import List from '@mui/material/List'
@@ -13,8 +11,8 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
-
-// const wallet1 = '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
 
 export interface WalletProps {
   balance: AddressBalance[]
@@ -24,15 +22,26 @@ const Wallet = (props: WalletProps): JSX.Element => {
   const balance = props.balance
   const dispatch = useDispatch()
   const tatum = useRef<Ethereum | null>(null)
-  const [address, setAddress] = useState<string>()
+  const [metamaskConnected, setMetamaskConnected] = useState(false)
+  const [address, setAddress] = useState<string>('0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F')
+  const [wallets, setWallets] = useState([
+    {
+      title: 'My wallet',
+      address: '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
+    },
+    {
+      title: 'Vitalik',
+      address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    }
+  ])
   const init = TatumSDK.init<Ethereum>({ network: Network.ETHEREUM, apiKey: { v4: config.apiKey } })
 
-  const connectWallet = () => {
+  const connectMetamask = () => {
     tatum.current?.walletProvider.use(MetaMask).getWallet().then((address) => {
       setAddress(address)
+      setMetamaskConnected(true)
+      setWallets(wallets => [...wallets, { title: 'MetaMask', address }])
       console.log(`wallet connected: ${address}`)
-      getBalance(address)
-      getTransactions(address)
     }).catch(() => {
       // todo: wallet not connected
     })
@@ -52,6 +61,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
           type: 'SET_BALLANCE',
           payload: balance.data
         })
+        console.log('set balance:', balance.data)
       }
     }).catch(() => {})
   }
@@ -74,61 +84,82 @@ const Wallet = (props: WalletProps): JSX.Element => {
   }
 
   useEffect(() => {
+    dispatch({
+      type: 'SET_BALLANCE',
+      payload: []
+    })
+    dispatch({
+      type: 'SET_DETAIL',
+      payload: null
+    })
+    getBalance(address)
+    getTransactions(address)
+  }, [address])
+
+  useEffect(() => {
     // init tatum
     init.then((network) => {
       tatum.current = network
       console.log('initialized')
-      // setAddress(wallet1)
-      // getBalance(wallet1)
-      // getTransactions(wallet1)
+      setAddress(address)
+      getBalance(address)
+      getTransactions(address)
     }).catch(() => {
       // todo: tatum not initialized
     })
   }, [])
 
-  return address === undefined
-    ? (
-        <Button onClick={() => {
-          if (tatum.current !== null) {
-            connectWallet()
+  return (
+    <Grid container spacing={3}>
+      <Grid item md={12}>
+        <Select value={address} fullWidth onChange={(event) => {
+          const newAddress = event.target.value
+          if (newAddress !== 'connect') {
+            setAddress(newAddress)
           }
         }}>
-            Connect Wallet
-        </Button>
-      )
-    : (
-        <Grid container spacing={3}>
-          <Grid item>
-            <CryptoIcon name="eth" size={25} />
-          </Grid>
-          <Grid item flex={1}>
-            <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
-          </Grid>
-          {balance.length > 0 && (
-            <Grid item md={12}>
-              <List>
-                {balance.map(b => (
-                  <ListItemButton key={`${b.address}-${b.asset}`} onClick={() => {
-                    dispatch({
-                      type: 'SET_DETAIL',
-                      payload: b
-                    })
-                  }}>
-                    <ListItemText primary={b.asset} secondary={b.balance} />
-                  </ListItemButton>
-                ))}
-              </List>
-            </Grid>
+          {wallets.map(wallet => (
+            <MenuItem value={wallet.address} key={wallet.address}>
+              {wallet.title}
+            </MenuItem>
+          ))}
+          {!metamaskConnected && (
+            <MenuItem value="connect" onClick={() => {
+              connectMetamask()
+            }}>
+              Connect MetaMask
+            </MenuItem>
           )}
-          {balance.length === 0 && (
-            <Grid item md={12} textAlign="center">
-              <Box mt={3}>
-                <CircularProgress />
-              </Box>
-            </Grid>
-          )}
+        </Select>
+      </Grid>
+      <Grid item md={12}>
+        <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
+      </Grid>
+      {balance.length > 0 && (
+        <Grid item md={12}>
+          <List>
+            {balance.map(b => (
+              <ListItemButton key={`${b.address}-${b.asset}`} onClick={() => {
+                dispatch({
+                  type: 'SET_DETAIL',
+                  payload: b
+                })
+              }}>
+                <ListItemText primary={b.asset} secondary={b.balance} />
+              </ListItemButton>
+            ))}
+          </List>
         </Grid>
-      )
+      )}
+      {balance.length === 0 && (
+        <Grid item md={12} textAlign="center">
+          <Box mt={3}>
+            <CircularProgress />
+          </Box>
+        </Grid>
+      )}
+    </Grid>
+  )
 }
 
 export default connect((state: RootState) => ({
