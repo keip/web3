@@ -1,129 +1,135 @@
-import Typography from '@mui/material/Typography'
-import { TatumSDK, Network, type Ethereum, MetaMask, type AddressBalance } from '@tatumio/tatum'
-import { useEffect, useRef, useState } from 'react'
-import { formatAddress } from '../helpers/index.ts'
-import config from '../config/index.ts'
-import Grid from '@mui/material/Grid'
-import { connect, useDispatch } from 'react-redux'
-import { type RootState } from '../types/index.ts'
-import List from '@mui/material/List'
-import ListItemButton from '@mui/material/ListItemButton'
-import ListItemText from '@mui/material/ListItemText'
-import CircularProgress from '@mui/material/CircularProgress'
-import Box from '@mui/material/Box'
-import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
+import Typography from "@mui/material/Typography";
+import {
+  TatumSDK,
+  Network,
+  type Ethereum,
+  MetaMask,
+  type AddressBalance,
+} from "@tatumio/tatum";
+import { useEffect, useRef, useState } from "react";
+import { formatAddress } from "../helpers/index.ts";
+import config from "../config/index.ts";
+import Grid from "@mui/material/Grid";
+import { connect, useDispatch } from "react-redux";
+import { type RootState } from "../types/index.ts";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 export interface WalletProps {
-  detail: AddressBalance
-  balance: AddressBalance[]
+  detail: AddressBalance;
+  balance: AddressBalance[];
 }
 
 const Wallet = (props: WalletProps): JSX.Element => {
-  const detail = props.detail
-  const balance = props.balance
-  const dispatch = useDispatch()
-  const tatum = useRef<Ethereum | null>(null)
-  const [metamaskConnected, setMetamaskConnected] = useState(false)
-  const [address, setAddress] = useState<string>()
+  const detail = props.detail;
+  const balance = props.balance;
+  const dispatch = useDispatch();
+  const [metamaskConnected, setMetamaskConnected] = useState(false);
   const [wallets, setWallets] = useState([
     {
-      title: 'My wallet',
-      address: '0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F'
+      title: "My wallet",
+      address: "0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F",
     },
     {
-      title: 'Vitalik',
-      address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+      title: "Vitalik",
+      address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    },
+  ]);
+  const [address, setAddress] = useState<string>(wallets[0].address);
+
+  const connectMetamask = async () => {
+    const tatum = await TatumSDK.init<Ethereum>({
+      network: Network.ETHEREUM,
+      apiKey: { v4: config.apiKey },
+    });
+    const address = await tatum.walletProvider.use(MetaMask).getWallet();
+    setAddress(address);
+    setMetamaskConnected(true);
+    setWallets((wallets) => [...wallets, { title: "MetaMask", address }]);
+    tatum.destroy();
+  };
+
+  const getBalance = async (address: string) => {
+    const tatum = await TatumSDK.init<Ethereum>({
+      network: Network.ETHEREUM,
+      apiKey: { v4: config.apiKey },
+    });
+    console.log("get balance:", address);
+    const balance = await tatum.address.getBalance({
+      addresses: [address],
+    });
+    if (balance.status === "SUCCESS") {
+      setDetail(balance.data[0]);
+      setBalance(balance.data);
+      console.log("set balance:", balance.data);
     }
-  ])
-  const init = TatumSDK.init<Ethereum>({ network: Network.ETHEREUM, apiKey: { v4: config.apiKey } })
+    tatum.destroy();
+  };
 
-  const connectMetamask = () => {
-    tatum.current?.walletProvider.use(MetaMask).getWallet().then((address) => {
-      setAddress(address)
-      setMetamaskConnected(true)
-      setWallets(wallets => [...wallets, { title: 'MetaMask', address }])
-      console.log(`wallet connected: ${address}`)
-    }).catch(() => {
-      // todo: wallet not connected
-    })
-  }
-
-  const getBalance = (address: string) => {
-    console.log('get balance:', address)
-    tatum.current?.address.getBalance({
-      addresses: [address]
-    }).then((balance) => {
-      if (balance.status === 'SUCCESS') {
-        setDetail(balance.data[0])
-        setBalance(balance.data)
-        console.log('set balance:', balance.data)
-      }
-    }).catch(() => {})
-  }
-
-  const getTransactions = (address: string) => {
-    console.log('get transactions:', address)
-    tatum.current?.address.getTransactions({
+  const getTransactions = async (address: string) => {
+    const tatum = await TatumSDK.init<Ethereum>({
+      network: Network.ETHEREUM,
+      apiKey: { v4: config.apiKey },
+    });
+    console.log("get transactions:", address);
+    const res = await tatum.address.getTransactions({
       address,
-      pageSize: 100,
-      transactionTypes: ['native', 'fungible']
-    }).then((res) => {
-      if (res.status === 'SUCCESS') {
-        dispatch({
-          type: 'SET_TRANSACTIONS',
-          payload: res.data
-        })
-      }
-      console.log('set transactions:', res.data)
-    }).catch(() => {})
-  }
+      pageSize: 50,
+      transactionTypes: ["native", "fungible"],
+    });
+    if (res.status === "SUCCESS") {
+      dispatch({
+        type: "SET_TRANSACTIONS",
+        payload: res.data,
+      });
+    }
+    tatum.destroy();
+    console.log("set transactions:", res);
+  };
 
   const setBalance = (payload: AddressBalance[]) => {
     dispatch({
-      type: 'SET_BALLANCE',
-      payload
-    })
-  }
+      type: "SET_BALLANCE",
+      payload,
+    });
+  };
 
   const setDetail = (payload: AddressBalance | null) => {
     dispatch({
-      type: 'SET_DETAIL',
-      payload
-    })
-  }
+      type: "SET_DETAIL",
+      payload,
+    });
+  };
 
   useEffect(() => {
     if (address !== undefined) {
-      setBalance([])
-      setDetail(null)
-      getBalance(address)
-      getTransactions(address)
+      setBalance([]);
+      setDetail(null);
+      getBalance(address);
+      getTransactions(address);
     }
-  }, [address])
-
-  useEffect(() => {
-    // init tatum
-    init.then((network) => {
-      tatum.current = network
-      console.log('initialized')
-      setAddress(wallets[0].address)
-    }).catch(() => {
-      // todo: tatum not initialized
-    })
-  }, [])
+  }, [address]);
 
   return (
     <Grid container spacing={3}>
       {address !== undefined && (
         <Grid item md={12}>
-          <Select value={address} fullWidth onChange={(event) => {
-            const newAddress = event.target.value
-            if (newAddress !== 'connect') {
-              setAddress(newAddress)
-            }
-          }}>
-            {wallets.map(wallet => (
+          <Select
+            value={address}
+            fullWidth
+            onChange={(event) => {
+              const newAddress = event.target.value;
+              if (newAddress !== "connect") {
+                setAddress(newAddress);
+              }
+            }}
+          >
+            {wallets.map((wallet) => (
               <MenuItem value={wallet.address} key={wallet.address}>
                 {wallet.title}
               </MenuItem>
@@ -132,7 +138,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
               <MenuItem
                 value="connect"
                 onClick={() => {
-                  connectMetamask()
+                  connectMetamask();
                 }}
               >
                 Connect MetaMask
@@ -143,20 +149,22 @@ const Wallet = (props: WalletProps): JSX.Element => {
       )}
       {address !== undefined && (
         <Grid item md={12}>
-          <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
+          <Typography variant="h5" align="center">
+            {formatAddress(address)}
+          </Typography>
         </Grid>
       )}
       {balance.length > 0 && (
         <Grid item md={12}>
           <List>
-            {balance.map(b => (
+            {balance.map((b) => (
               <ListItemButton
                 key={`${b.address}-${b.asset}`}
                 onClick={() => {
                   dispatch({
-                    type: 'SET_DETAIL',
-                    payload: b
-                  })
+                    type: "SET_DETAIL",
+                    payload: b,
+                  });
                 }}
                 selected={b.tokenAddress === detail.tokenAddress}
               >
@@ -174,10 +182,10 @@ const Wallet = (props: WalletProps): JSX.Element => {
         </Grid>
       )}
     </Grid>
-  )
-}
+  );
+};
 
 export default connect((state: RootState) => ({
   balance: state.balance,
-  detail: state.detail
-}))(Wallet)
+  detail: state.detail,
+}))(Wallet);

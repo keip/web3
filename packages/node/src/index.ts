@@ -1,9 +1,9 @@
-import express from 'express'
+import express from "express";
 
-const app = express()
+const app = express();
 
-app.get('/account-info', (req, res) => {
+app.get("/account-info", (req, res) => {
   res.json({
-    success: true
-  })
-})
+    success: true,
+  });
+});
