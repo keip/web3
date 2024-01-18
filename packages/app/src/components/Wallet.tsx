@@ -15,10 +15,12 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 
 export interface WalletProps {
+  detail: AddressBalance
   balance: AddressBalance[]
 }
 
 const Wallet = (props: WalletProps): JSX.Element => {
+  const detail = props.detail
   const balance = props.balance
   const dispatch = useDispatch()
   const tatum = useRef<Ethereum | null>(null)
@@ -139,12 +141,16 @@ const Wallet = (props: WalletProps): JSX.Element => {
         <Grid item md={12}>
           <List>
             {balance.map(b => (
-              <ListItemButton key={`${b.address}-${b.asset}`} onClick={() => {
-                dispatch({
-                  type: 'SET_DETAIL',
-                  payload: b
-                })
-              }}>
+              <ListItemButton
+                key={`${b.address}-${b.asset}`}
+                onClick={() => {
+                  dispatch({
+                    type: 'SET_DETAIL',
+                    payload: b
+                  })
+                }}
+                selected={b.tokenAddress === detail.tokenAddress}
+              >
                 <ListItemText primary={b.asset} secondary={b.balance} />
               </ListItemButton>
             ))}
@@ -163,5 +169,6 @@ const Wallet = (props: WalletProps): JSX.Element => {
 }
 
 export default connect((state: RootState) => ({
-  balance: state.balance
+  balance: state.balance,
+  detail: state.detail
 }))(Wallet)

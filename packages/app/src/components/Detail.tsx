@@ -7,6 +7,7 @@ import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import TimeAgo from 'react-timeago'
 
 interface WalletDetailProps {
   balance: AddressBalance[]
@@ -53,9 +54,18 @@ const WalletDetail = (props: WalletDetailProps) => {
               <Grid item md={12} key={`${transaction.address}-${key}`}>
                 <Card>
                   <CardContent>
-                    <Typography color={transaction.transactionSubtype === 'incoming' ? 'green' : 'red'}>
-                      {transaction.transactionSubtype === 'incoming' && '+'}{transaction.amount}
-                    </Typography>
+                    <Grid container justifyContent="space-between" alignItems="center">
+                      <Grid item>
+                        <Typography color={transaction.transactionSubtype === 'incoming' ? 'green' : 'red'}>
+                          {transaction.transactionSubtype === 'incoming' && '+'}{transaction.amount}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="caption" color="gray">
+                          <TimeAgo date={transaction.timestamp} />
+                        </Typography>
+                      </Grid>
+                    </Grid>
                   </CardContent>
                 </Card>
               </Grid>
