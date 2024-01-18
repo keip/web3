@@ -104,8 +104,6 @@ const Wallet = (props: WalletProps): JSX.Element => {
       tatum.current = network
       console.log('initialized')
       setAddress(address)
-      getBalance(address)
-      getTransactions(address)
     }).catch(() => {
       // todo: tatum not initialized
     })
@@ -126,9 +124,12 @@ const Wallet = (props: WalletProps): JSX.Element => {
             </MenuItem>
           ))}
           {!metamaskConnected && (
-            <MenuItem value="connect" onClick={() => {
-              connectMetamask()
-            }}>
+            <MenuItem
+              value="connect"
+              onClick={() => {
+                connectMetamask()
+              }}
+            >
               Connect MetaMask
             </MenuItem>
           )}
