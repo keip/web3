@@ -25,7 +25,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
   const dispatch = useDispatch()
   const tatum = useRef<Ethereum | null>(null)
   const [metamaskConnected, setMetamaskConnected] = useState(false)
-  const [address, setAddress] = useState<string>('0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F')
+  const [address, setAddress] = useState<string>()
   const [wallets, setWallets] = useState([
     {
       title: 'My wallet',
@@ -55,14 +55,8 @@ const Wallet = (props: WalletProps): JSX.Element => {
       addresses: [address]
     }).then((balance) => {
       if (balance.status === 'SUCCESS') {
-        dispatch({
-          type: 'SET_DETAIL',
-          payload: balance.data[0]
-        })
-        dispatch({
-          type: 'SET_BALLANCE',
-          payload: balance.data
-        })
+        setDetail(balance.data[0])
+        setBalance(balance.data)
         console.log('set balance:', balance.data)
       }
     }).catch(() => {})
@@ -72,7 +66,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
     console.log('get transactions:', address)
     tatum.current?.address.getTransactions({
       address,
-      pageSize: 50,
+      pageSize: 100,
       transactionTypes: ['native', 'fungible']
     }).then((res) => {
       if (res.status === 'SUCCESS') {
@@ -85,17 +79,27 @@ const Wallet = (props: WalletProps): JSX.Element => {
     }).catch(() => {})
   }
 
-  useEffect(() => {
+  const setBalance = (payload: AddressBalance[]) => {
     dispatch({
       type: 'SET_BALLANCE',
-      payload: []
+      payload
     })
+  }
+
+  const setDetail = (payload: AddressBalance | null) => {
     dispatch({
       type: 'SET_DETAIL',
-      payload: null
+      payload
     })
-    getBalance(address)
-    getTransactions(address)
+  }
+
+  useEffect(() => {
+    if (address !== undefined) {
+      setBalance([])
+      setDetail(null)
+      getBalance(address)
+      getTransactions(address)
+    }
   }, [address])
 
   useEffect(() => {
@@ -103,7 +107,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
     init.then((network) => {
       tatum.current = network
       console.log('initialized')
-      setAddress(address)
+      setAddress(wallets[0].address)
     }).catch(() => {
       // todo: tatum not initialized
     })
@@ -111,33 +115,37 @@ const Wallet = (props: WalletProps): JSX.Element => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item md={12}>
-        <Select value={address} fullWidth onChange={(event) => {
-          const newAddress = event.target.value
-          if (newAddress !== 'connect') {
-            setAddress(newAddress)
-          }
-        }}>
-          {wallets.map(wallet => (
-            <MenuItem value={wallet.address} key={wallet.address}>
-              {wallet.title}
-            </MenuItem>
-          ))}
-          {!metamaskConnected && (
-            <MenuItem
-              value="connect"
-              onClick={() => {
-                connectMetamask()
-              }}
-            >
-              Connect MetaMask
-            </MenuItem>
-          )}
-        </Select>
-      </Grid>
-      <Grid item md={12}>
-        <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
-      </Grid>
+      {address !== undefined && (
+        <Grid item md={12}>
+          <Select value={address} fullWidth onChange={(event) => {
+            const newAddress = event.target.value
+            if (newAddress !== 'connect') {
+              setAddress(newAddress)
+            }
+          }}>
+            {wallets.map(wallet => (
+              <MenuItem value={wallet.address} key={wallet.address}>
+                {wallet.title}
+              </MenuItem>
+            ))}
+            {!metamaskConnected && (
+              <MenuItem
+                value="connect"
+                onClick={() => {
+                  connectMetamask()
+                }}
+              >
+                Connect MetaMask
+              </MenuItem>
+            )}
+          </Select>
+        </Grid>
+      )}
+      {address !== undefined && (
+        <Grid item md={12}>
+          <Typography variant="h5" align="center">{formatAddress(address)}</Typography>
+        </Grid>
+      )}
       {balance.length > 0 && (
         <Grid item md={12}>
           <List>
