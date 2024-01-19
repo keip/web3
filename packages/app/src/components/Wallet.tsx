@@ -20,7 +20,7 @@ import Box from "@mui/material/Box";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 
-type WalletNetworks = "ETH" | "BTC";
+type WalletNetworks = "ETH" | "BTC" | "SOL";
 
 export interface WalletProps {
   detail: AddressBalance;
@@ -30,7 +30,7 @@ export interface WalletProps {
 const Wallet = (props: WalletProps): JSX.Element => {
   const detail = props.detail;
   const balance = props.balance;
-  const networks: WalletNetworks[] = ["ETH", "BTC"];
+  const networks: WalletNetworks[] = ["ETH", "BTC", "SOL"];
   const dispatch = useDispatch();
   const [metamaskConnected, setMetamaskConnected] = useState(false);
   const [network, setNetwork] = useState<WalletNetworks>("ETH");
@@ -49,6 +49,11 @@ const Wallet = (props: WalletProps): JSX.Element => {
       network: "BTC",
       title: "Random BTC address",
       address: "bc1qnr8t4tq48umfase7ylnfzu6z988wk9q0jezgqv",
+    },
+    {
+      network: "SOL",
+      title: "Random Solana address",
+      address: "7Nb36gSXXVusXHGJM6a3iQbeoJ3PgwG83HLSWrg7wnEf",
     },
   ]);
   const [address, setAddress] = useState<string>(wallets[0].address);
@@ -77,6 +82,11 @@ const Wallet = (props: WalletProps): JSX.Element => {
       case "BTC":
         return await TatumSDK.init<Ethereum>({
           network: Network.BITCOIN,
+          apiKey: { v4: config.apiKey },
+        });
+      case "SOL":
+        return await TatumSDK.init<Ethereum>({
+          network: Network.SOLANA,
           apiKey: { v4: config.apiKey },
         });
       default:
@@ -127,10 +137,11 @@ const Wallet = (props: WalletProps): JSX.Element => {
     const address =
       network === "ETH"
         ? wallets.filter((w) => w.network === "ETH")[0]?.address
-        : wallets.filter((w) => w.network === "BTC")[0]?.address;
+        : network === "BTC"
+          ? wallets.filter((w) => w.network === "BTC")[0]?.address
+          : wallets.filter((w) => w.network === "SOL")[0]?.address;
 
     setNetwork(network);
-
     setAddress(address);
   };
 
