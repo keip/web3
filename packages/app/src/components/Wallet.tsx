@@ -3,7 +3,6 @@ import {
   TatumSDK,
   Network,
   type Ethereum,
-  MetaMask,
   type AddressBalance,
 } from "@tatumio/tatum";
 import { useEffect, useState } from "react";
@@ -11,7 +10,7 @@ import { formatAddress } from "../helpers/index.ts";
 import config from "../config/index.ts";
 import Grid from "@mui/material/Grid";
 import { connect, useDispatch } from "react-redux";
-import { type RootState } from "../types/index.ts";
+import { type WalletNetworks, type RootState } from "../types/index.ts";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -19,58 +18,54 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import CryptoIcon from "react-crypto-icons";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 
-type WalletNetworks = "ETH" | "BTC" | "SOL";
+const wallets: Array<{
+  network: WalletNetworks;
+  title: string;
+  address: string;
+}> = [
+  {
+    network: "ETH",
+    title: "My wallet",
+    address: "0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F",
+  },
+  {
+    network: "ETH",
+    title: "Vitalik",
+    address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  },
+  {
+    network: "BTC",
+    title: "Random BTC address",
+    address: "bc1qnr8t4tq48umfase7ylnfzu6z988wk9q0jezgqv",
+  },
+  {
+    network: "SOL",
+    title: "Random Solana address",
+    address: "7Nb36gSXXVusXHGJM6a3iQbeoJ3PgwG83HLSWrg7wnEf",
+  },
+];
 
-export interface WalletProps {
+const networks: Array<{ symbol: WalletNetworks; title: string }> = [
+  { symbol: "ETH", title: "Ethereum" },
+  { symbol: "BTC", title: "Bitcoin" },
+  { symbol: "SOL", title: "Solana" },
+];
+
+interface WalletProps {
   detail: AddressBalance;
   balance: AddressBalance[];
 }
 
 const Wallet = (props: WalletProps): JSX.Element => {
+  const dispatch = useDispatch();
   const detail = props.detail;
   const balance = props.balance;
-  const networks: WalletNetworks[] = ["ETH", "BTC", "SOL"];
-  const dispatch = useDispatch();
-  const [metamaskConnected, setMetamaskConnected] = useState(false);
   const [network, setNetwork] = useState<WalletNetworks>("ETH");
-  const [wallets, setWallets] = useState([
-    {
-      network: "ETH",
-      title: "My wallet",
-      address: "0x5445A1085E5251732bD1A5a60a1E9E76b75bdF0F",
-    },
-    {
-      network: "ETH",
-      title: "Vitalik",
-      address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-    },
-    {
-      network: "BTC",
-      title: "Random BTC address",
-      address: "bc1qnr8t4tq48umfase7ylnfzu6z988wk9q0jezgqv",
-    },
-    {
-      network: "SOL",
-      title: "Random Solana address",
-      address: "7Nb36gSXXVusXHGJM6a3iQbeoJ3PgwG83HLSWrg7wnEf",
-    },
-  ]);
   const [address, setAddress] = useState<string>(wallets[0].address);
-
-  const connectMetamask = async () => {
-    const tatum = await getTatum();
-    const address = await tatum.walletProvider.use(MetaMask).getWallet();
-    setAddress(address);
-    setMetamaskConnected(true);
-    setNetwork("ETH");
-    setWallets((wallets) => [
-      ...wallets,
-      { title: "MetaMask", address, network: "ETH" },
-    ]);
-    await tatum.destroy();
-    return address;
-  };
 
   const getTatum = async () => {
     switch (network) {
@@ -133,6 +128,7 @@ const Wallet = (props: WalletProps): JSX.Element => {
 
   const switchNetwork = (network: WalletNetworks) => {
     console.log("switch network", network);
+    setNetwork(network);
 
     const address =
       network === "ETH"
@@ -141,7 +137,6 @@ const Wallet = (props: WalletProps): JSX.Element => {
           ? wallets.filter((w) => w.network === "BTC")[0]?.address
           : wallets.filter((w) => w.network === "SOL")[0]?.address;
 
-    setNetwork(network);
     setAddress(address);
   };
 
@@ -181,85 +176,53 @@ const Wallet = (props: WalletProps): JSX.Element => {
       {address !== undefined && (
         <>
           <Grid item md={12}>
+            <FormControl fullWidth>
+              <InputLabel>Network</InputLabel>
+              <Select
+                value={network}
+                fullWidth
+                onChange={(event) => {
+                  const newNetwork = event.target.value as WalletNetworks;
+                  switchNetwork(newNetwork);
+                }}
+                startAdornment={
+                  <Box mr={1}>
+                    <CryptoIcon name={network.toLowerCase()} size={18} />
+                  </Box>
+                }
+                label="Network"
+              >
+                {networks.map((network) => (
+                  <MenuItem
+                    value={network.symbol}
+                    key={`network-${network.symbol}`}
+                  >
+                    {network.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item md={12}>
             <Select
-              value={network}
+              value={address}
               fullWidth
               onChange={(event) => {
-                const newNetwork = event.target.value as WalletNetworks;
-                switchNetwork(newNetwork);
+                const newAddress = event.target.value;
+                if (newAddress !== "connect") {
+                  setAddress(newAddress);
+                }
               }}
-              startAdornment={
-                <Box mr={1}>
-                  <Typography>Network:</Typography>
-                </Box>
-              }
-              size="small"
             >
-              {networks.map((network) => (
-                <MenuItem value={network} key={`network-${network}`}>
-                  {network}
-                </MenuItem>
-              ))}
+              {wallets
+                .filter((w) => w.network === network)
+                .map((wallet) => (
+                  <MenuItem value={wallet.address} key={wallet.address}>
+                    {wallet.title}
+                  </MenuItem>
+                ))}
             </Select>
           </Grid>
-          {network === "BTC" && (
-            <Grid item md={12}>
-              <Select
-                value={address}
-                fullWidth
-                onChange={(event) => {
-                  const newAddress = event.target.value;
-                  if (newAddress !== "connect") {
-                    setAddress(newAddress);
-                  }
-                }}
-              >
-                {wallets
-                  .filter((w) => w.network === "BTC")
-                  .map((wallet) => (
-                    <MenuItem value={wallet.address} key={wallet.address}>
-                      {wallet.title}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </Grid>
-          )}
-          {network === "ETH" && (
-            <Grid item md={12}>
-              <Select
-                value={address}
-                fullWidth
-                onChange={(event) => {
-                  const newAddress = event.target.value;
-                  if (newAddress !== "connect") {
-                    setAddress(newAddress);
-                  }
-                }}
-              >
-                {wallets
-                  .filter((w) => w.network === "ETH")
-                  .map((wallet) => (
-                    <MenuItem value={wallet.address} key={wallet.address}>
-                      {wallet.title}
-                    </MenuItem>
-                  ))}
-                {!metamaskConnected && (
-                  <MenuItem
-                    value="connect"
-                    onClick={() => {
-                      connectMetamask()
-                        .then((address) => {
-                          console.log("connect wallet: ", address);
-                        })
-                        .catch(() => {});
-                    }}
-                  >
-                    Connect MetaMask
-                  </MenuItem>
-                )}
-              </Select>
-            </Grid>
-          )}
           <Grid item md={12}>
             <Typography variant="h5" align="center">
               {formatAddress(address)}

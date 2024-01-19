@@ -5,3 +5,5 @@ export interface RootState {
   transactions: AddressTransaction[];
   detail: AddressBalance;
 }
+
+export type WalletNetworks = "ETH" | "BTC" | "SOL";
